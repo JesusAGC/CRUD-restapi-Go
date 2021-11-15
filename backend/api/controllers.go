@@ -157,9 +157,9 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode("Not found")
+	} else {
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode("Deleted succesfully")
 	}
-
-	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode("Deleted succesfully")
 
 }

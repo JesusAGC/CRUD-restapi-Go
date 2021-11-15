@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	models "person/models"
 )
@@ -184,9 +185,19 @@ func Delete(curp string, id string) error {
 	}
 	defer prepareQuery.Close()
 
-	_, err = prepareQuery.Exec(curp, id)
-	if err != nil {
-		return err
+	res, err2 := prepareQuery.Exec(curp, id)
+	if err2 != nil {
+		return err2
+	}
+
+	rows, err2 := res.RowsAffected()
+	if err2 != nil {
+		return err2
+	}
+
+	if rows == 0 {
+		mistake := errors.New("no rows affected")
+		return mistake
 	}
 
 	fmt.Println("Se ha eliminado exitosamente La persona con curp: ", curp)
