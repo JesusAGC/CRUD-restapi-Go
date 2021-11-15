@@ -8,9 +8,9 @@ import (
 
 func DbConnection() (db *sql.DB, e error) {
 	dbDriver := "mysql"
-	dbUser := "root"
-	dbPass := "example"
-	dbName := "personas_db"
+	dbUser := "user1"
+	dbPass := "1234"
+	dbName := "registro_tickets"
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(127.0.0.1:3306)/"+dbName+"?parseTime=true")
 	if err != nil {
 		fmt.Println(err)
@@ -19,7 +19,7 @@ func DbConnection() (db *sql.DB, e error) {
 	return db, nil
 }
 
-func Insert(p models.Person) error {
+func Insert(t models.Ticket) error {
 	db, err := DbConnection()
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func Insert(p models.Person) error {
 	defer db.Close()
 
 	//Preparamos para prevenir inyecciones SQL
-	prepareQuery, err := db.Prepare("INSERT INTO personas (curp, nombre, paterno, materno, sexo, fecha_nac, estado, municipio, genero) VALUES(?,?,?,?,?,?,?,?,?)")
+	prepareQuery, err := db.Prepare("INSERT INTO Tickets (NombreCompleto, CURP, Nombre, Paterno, Materno, Telefono, Celular, Email, Nivel, Municipio, Asunto) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func Insert(p models.Person) error {
 	defer prepareQuery.Close()
 
 	// ejecutar sentencia, un valor por cada '?'
-	_, err = prepareQuery.Exec(p.Curp, p.Nombre, p.Paterno, p.Materno, p.Sexo, p.FechaNac, p.Estado, p.Municipio, p.Genero)
+	_, err = prepareQuery.Exec(t.NombreCompleto, t.CURP, t.Nombre, t.Paterno, t.Materno, t.Telefono, t.Celular, t.Email, t.Nivel, t.Municipio, t.Asunto)
 	if err != nil {
 		return err
 	}
@@ -45,9 +45,9 @@ func Insert(p models.Person) error {
 	return nil
 }
 
-func GetAllData() ([]models.Person, error) {
+func GetAllData() ([]models.Ticket, error) {
 
-	personas := []models.Person{}
+	tickets := []models.Ticket{}
 	db, err := DbConnection()
 	if err != nil {
 		fmt.Println("No se pudo conectar")
@@ -56,7 +56,7 @@ func GetAllData() ([]models.Person, error) {
 
 	defer db.Close()
 	// checar todo lo que lleve id
-	rows, err := db.Query("SELECT curp, nombre, paterno, materno, sexo, fecha_nac, estado, municipio, genero FROM personas")
+	rows, err := db.Query("SELECT ID, NombreCompleto, CURP, Nombre, Paterno, Materno, Telefono, Celular, Email, Nivel, Municipio, Asunto FROM Tickets;")
 	if err != nil {
 		return nil, err
 	}
@@ -64,51 +64,80 @@ func GetAllData() ([]models.Person, error) {
 	defer rows.Close()
 
 	// Aquí vamos p "mapear" lo que traiga la consulta en el ciclo de más abajo
-	var p models.Person
+	var t models.Ticket
 
 	for rows.Next() {
-		err = rows.Scan(&p.Curp, &p.Nombre, &p.Paterno, &p.Materno, &p.Sexo, &p.FechaNac, &p.Estado, &p.Municipio, &p.Genero)
+		err = rows.Scan(&t.Id, &t.NombreCompleto, &t.CURP, &t.Nombre, &t.Paterno, &t.Materno, &t.Telefono, &t.Celular, &t.Email, &t.Nivel, &t.Municipio, &t.Asunto)
 		if err != nil {
 			return nil, err
 		}
 
-		personas = append(personas, p)
+		tickets = append(tickets, t)
 	}
 
-	return personas, nil
+	return tickets, nil
 }
 
 // get by curp.
-func GetByCurp(curp string) (models.Person, error) {
-	var p models.Person
+func GetByCurp(curp string) (models.Ticket, error) {
+	var t models.Ticket
 
 	db, err := DbConnection()
 	if err != nil {
-		return p, err
+		return t, err
 	}
 
 	defer db.Close()
 
-	query := fmt.Sprintf(`SELECT curp, nombre, paterno, materno, sexo, fecha_nac, estado, municipio, genero FROM personas HAVING curp='%s'`, curp)
+	query := fmt.Sprintf(`SELECT ID, NombreCompleto, CURP, Nombre, Paterno, Materno, Telefono, Celular, Email, Nivel, Municipio, Asunto	FROM Tickets where CURP ='%s'`, curp)
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return p, err
+		return t, err
 	}
 
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&p.Curp, &p.Nombre, &p.Paterno, &p.Materno, &p.Sexo, &p.FechaNac, &p.Estado, &p.Municipio, &p.Genero)
+		err = rows.Scan(&t.Id, &t.NombreCompleto, &t.CURP, &t.Nombre, &t.Paterno, &t.Materno, &t.Telefono, &t.Celular, &t.Email, &t.Nivel, &t.Municipio, &t.Asunto)
 		if err != nil {
-			return p, err
+			return t, err
 		}
 	}
 
-	return p, nil
+	return t, nil
 }
 
-func Update(p models.Person, curp string) error {
+func GetByCurpAndID(id string, curp string) (models.Ticket, error) {
+	var t models.Ticket
+
+	db, err := DbConnection()
+	if err != nil {
+		return t, err
+	}
+
+	defer db.Close()
+
+	query := fmt.Sprintf(`SELECT CURP, NombreCompleto, CURP, Nombre, Paterno, Materno, Telefono, Celular, Email, Nivel, Municipio, Asunto FROM Tickets where ID ='%s' and CURP = '%s'`, id, curp)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return t, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&t.Id, &t.NombreCompleto, &t.CURP, &t.Nombre, &t.Paterno, &t.Materno, &t.Telefono, &t.Celular, &t.Email, &t.Nivel, &t.Municipio, &t.Asunto)
+		if err != nil {
+			return t, err
+		}
+	}
+
+	return t, nil
+}
+
+func Update(t models.Ticket, id string, curp string) error {
 
 	db, err := DbConnection()
 	if err != nil {
@@ -117,21 +146,21 @@ func Update(p models.Person, curp string) error {
 
 	// checar si agregar la info de este objeto o no
 	// agregar condicionales con los diferentes datos
-	_, err = GetByCurp(curp)
+	_, err = GetByCurpAndID(id, curp)
 	if err != nil {
 		return err
 	}
 
 	defer db.Close()
 
-	query := fmt.Sprintf(`UPDATE personas SET  nombre = ?, paterno = ?, materno = ?, sexo = ?, fecha_nac = ?, estado = ?, municipio = ?, genero = ? WHERE curp ='%s'`, curp)
+	query := fmt.Sprintf(`UPDATE Tickets SET NombreCompleto=?, CURP=?, Nombre=?, Paterno=?, Materno=?, Telefono=?, Celular=?, Email=?, Nivel=?, Municipio=?, Asunto=? WHERE CURP ='%s' AND ID = '%s'`, curp, id)
 	prepareQuery, err := db.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer prepareQuery.Close()
 
-	_, err = prepareQuery.Exec(p.Nombre, p.Paterno, p.Materno, p.Sexo, p.FechaNac, p.Estado, p.Municipio, p.Genero)
+	_, err = prepareQuery.Exec(&t.NombreCompleto, &t.CURP, &t.Nombre, &t.Paterno, &t.Materno, &t.Telefono, &t.Celular, &t.Email, &t.Nivel, &t.Municipio, &t.Asunto)
 	if err != nil {
 		return err
 	}
@@ -141,7 +170,7 @@ func Update(p models.Person, curp string) error {
 
 }
 
-func Delete(curp string) error {
+func Delete(curp string, id string) error {
 	db, err := DbConnection()
 	if err != nil {
 		return err
@@ -149,13 +178,13 @@ func Delete(curp string) error {
 
 	defer db.Close()
 
-	prepareQuery, err := db.Prepare("DELETE FROM personas WHERE curp = ?")
+	prepareQuery, err := db.Prepare("DELETE FROM Tickets WHERE CURP = ? AND ID = ?")
 	if err != nil {
 		return err
 	}
 	defer prepareQuery.Close()
 
-	_, err = prepareQuery.Exec(curp)
+	_, err = prepareQuery.Exec(curp, id)
 	if err != nil {
 		return err
 	}
