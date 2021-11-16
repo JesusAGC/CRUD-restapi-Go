@@ -15,7 +15,8 @@ func MyRoutes() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", GetAllTickets).Methods("GET")
 	router.HandleFunc("/", CreateTicket).Methods("POST")
-	router.HandleFunc("/ticket/{curp}", GetTicketBYCURP).Methods("GET")
+	router.HandleFunc("/ticket/{curp}", GetTicketByCURP).Methods("GET")
+	router.HandleFunc("/pdf/{curp}/{id}", GetPDF).Methods("GET")
 	router.HandleFunc("/ticket/{curp}/{id}", UpdateTicket).Methods("PUT")
 	router.HandleFunc("/ticket/{curp}/{id}", DeleteTicket).Methods("DELETE")
 
@@ -76,7 +77,7 @@ func GetAllTickets(w http.ResponseWriter, r *http.Request) {
 }
 
 // function to find a ticket by his curp.
-func GetTicketBYCURP(w http.ResponseWriter, r *http.Request) {
+func GetTicketByCURP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	// Allowing CORS to any server requests.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -162,4 +163,30 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode("Deleted succesfully")
 	}
 
+}
+
+func GetPDF(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	// Allowing CORS to any server requests.
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Specifying HTTP methods allowed.
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	curp := mux.Vars(r)["curp"]
+	id := mux.Vars(r)["id"]
+	ticketdb, err := database.GetByCurpAndID(curp, id)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode("Not found")
+	} else {
+		data, err3 := CreatePDF(ticketdb)
+		if err3 != nil {
+			w.WriteHeader(http.StatusNoContent)
+			json.NewEncoder(w).Encode("Error : Encode failure")
+		} else {
+			w.WriteHeader(http.StatusAccepted)
+			json.NewEncoder(w).Encode(data)
+		}
+
+	}
 }
