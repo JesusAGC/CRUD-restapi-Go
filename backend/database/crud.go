@@ -119,7 +119,7 @@ func GetByCurpAndID(id string, curp string) (models.Ticket, error) {
 
 	defer db.Close()
 
-	query := fmt.Sprintf(`SELECT CURP, NombreCompleto, CURP, Nombre, Paterno, Materno, Telefono, Celular, Email, Nivel, Municipio, Asunto FROM Tickets where ID ='%s' and CURP = '%s'`, id, curp)
+	query := fmt.Sprintf(`SELECT ID, CURP, NombreCompleto, CURP, Nombre, Paterno, Materno, Telefono, Celular, Email, Nivel, Municipio, Asunto FROM Tickets where ID ='%s' and CURP = '%s'`, id, curp)
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -129,7 +129,7 @@ func GetByCurpAndID(id string, curp string) (models.Ticket, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&t.Id, &t.NombreCompleto, &t.CURP, &t.Nombre, &t.Paterno, &t.Materno, &t.Telefono, &t.Celular, &t.Email, &t.Nivel, &t.Municipio, &t.Asunto)
+		err = rows.Scan(&t.Id, &t.CURP, &t.NombreCompleto, &t.CURP, &t.Nombre, &t.Paterno, &t.Materno, &t.Telefono, &t.Celular, &t.Email, &t.Nivel, &t.Municipio, &t.Asunto)
 		if err != nil {
 			return t, err
 		}

@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	router := api.MyRoutes()
 	log.Println("Servidor en funcionamiento...")
 	log.Fatal(http.ListenAndServe(":9000", router))

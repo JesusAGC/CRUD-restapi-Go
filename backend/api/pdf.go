@@ -2,7 +2,6 @@ package api
 
 import (
 	"bytes"
-	"fmt"
 	models "person/models"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 )
 
 func CreatePDF(t models.Ticket) ([]byte, error) {
+	println("CURP:  " + t.CURP)
 	pdf := gofpdf.New("P", "pt", "Letter", "")
 	pdf.SetMargins(10, 10, 10)
 	pdf.AliasNbPages("")
@@ -38,11 +38,12 @@ func CreatePDF(t models.Ticket) ([]byte, error) {
 	pdf.CellFormat(592, 18, "Email: "+t.Email, "", 1, "L", false, 0, "")
 	pdf.CellFormat(592, 18, "Nivel: "+Niveles[t.Nivel], "", 1, "L", false, 0, "")
 	pdf.CellFormat(592, 18, "Municipio: "+MunMap[t.Municipio], "", 1, "L", false, 0, "")
-	pdf.CellFormat(592, 18, "Asunto: "+t.Asunto, "", 1, "L", false, 0, "")
+	pdf.CellFormat(592, 18, "Asunto: "+Asuntos[t.Asunto], "", 1, "L", false, 0, "")
 	pdf.Ln(-1)
 	pdf.Line(pdf.GetX(), pdf.GetY(), 602, pdf.GetY())
 	pdf.Ln(-1)
-	pdf.Image("QRSEP.png", 246, pdf.GetY(), 100, 100, false, "", 0, "")
+	// createQR()
+	// pdf.Image("New.jpeg", 246, pdf.GetY(), 100, 100, false, "", 0, "")
 
 	// err2 := pdf.OutputFileAndClose("test_2.pdf")
 	// if err2 != nil {
@@ -51,12 +52,27 @@ func CreatePDF(t models.Ticket) ([]byte, error) {
 	var buff bytes.Buffer
 	err := pdf.Output(&buff)
 	if err != nil {
-		return nil, fmt.Errorf("Error escribiendo bytes %s", err)
+		print(err.Error())
+		return nil, err
 	}
 
 	return buff.Bytes(), nil
 
 }
+
+// func createQR() {
+// 	qrc, err := qrcode.New("https://www.seducoahuila.gob.mx/", qrcode.WithBgColorRGBHex("#000000"))
+// 	if err != nil {
+// 		fmt.Printf("could not generate QRCode: %v", err)
+// 	}
+
+// path to create and save the new qr-image
+// if err := qrc.Save("./New.jpeg"); err != nil {
+// 	fmt.Printf("could not save image: %v", err)
+// }
+
+//fmt.Println("The code was succesfully created!")
+// }
 
 var MunMap = map[string]string{
 	"01":  "Abasolo",

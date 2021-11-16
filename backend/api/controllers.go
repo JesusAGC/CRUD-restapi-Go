@@ -174,7 +174,7 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	curp := mux.Vars(r)["curp"]
 	id := mux.Vars(r)["id"]
-	ticketdb, err := database.GetByCurpAndID(curp, id)
+	ticketdb, err := database.GetByCurpAndID(id, curp)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode("Not found")
@@ -182,7 +182,7 @@ func GetPDF(w http.ResponseWriter, r *http.Request) {
 		data, err3 := CreatePDF(ticketdb)
 		if err3 != nil {
 			w.WriteHeader(http.StatusNoContent)
-			json.NewEncoder(w).Encode("Error : Encode failure")
+			json.NewEncoder(w).Encode("Encode failure")
 		} else {
 			w.WriteHeader(http.StatusAccepted)
 			json.NewEncoder(w).Encode(data)
