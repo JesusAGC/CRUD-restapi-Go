@@ -39,9 +39,11 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 
 	ticketDB, _ := database.GetByCurp(ticket.CURP)
 
+	fmt.Println("CURP: " + ticket.CURP)
+
 	fmt.Println("personDB es: ", ticketDB)
 
-	if ticketDB.CURP == "" {
+	if ticketDB == nil {
 
 		err := database.Insert(ticket)
 		if err != nil {
@@ -50,10 +52,20 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(ticket)
+		fmt.Print("Se guardo el ticket")
+
+	} else if ticketDB[0].CURP == ticket.CURP {
+		err := database.Insert(ticket)
+		if err != nil {
+			fmt.Println(err)
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(ticket)
+		fmt.Print("Curp ya registrado, se pidio otro ticket")
 
 	} else {
 		w.WriteHeader(http.StatusNotAcceptable)
-		json.NewEncoder(w).Encode("ERROR: the user is already created with that curp")
+		json.NewEncoder(w).Encode("ERROR: the ticket is already created")
 	}
 
 }
@@ -96,7 +108,7 @@ func GetTicketByCURP(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	if ticketDB.CURP == "" {
+	if ticketDB == nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode("Not found")
 

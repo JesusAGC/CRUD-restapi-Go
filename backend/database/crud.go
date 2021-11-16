@@ -80,12 +80,14 @@ func GetAllData() ([]models.Ticket, error) {
 }
 
 // get by curp.
-func GetByCurp(curp string) (models.Ticket, error) {
+func GetByCurp(curp string) ([]models.Ticket, error) {
+	var tickets []models.Ticket
+
 	var t models.Ticket
 
 	db, err := DbConnection()
 	if err != nil {
-		return t, err
+		return tickets, err
 	}
 
 	defer db.Close()
@@ -94,19 +96,18 @@ func GetByCurp(curp string) (models.Ticket, error) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return t, err
+		return tickets, err
 	}
-
-	defer rows.Close()
 
 	for rows.Next() {
 		err = rows.Scan(&t.Id, &t.NombreCompleto, &t.CURP, &t.Nombre, &t.Paterno, &t.Materno, &t.Telefono, &t.Celular, &t.Email, &t.Nivel, &t.Municipio, &t.Asunto)
+		tickets = append(tickets, t)
 		if err != nil {
-			return t, err
+			return tickets, err
 		}
 	}
 
-	return t, nil
+	return tickets, nil
 }
 
 func GetByCurpAndID(id string, curp string) (models.Ticket, error) {
